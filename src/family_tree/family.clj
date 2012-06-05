@@ -2,20 +2,15 @@
   (let [line "<Bregor> parent_of <Hirwen>, <Gilwen>, <Bregil>, <Bregolas>, <Barahir>, <Gwindor>."
         parent-children (re-find #"(<\w+>) parent_of (.+)" line)
         child-matcher (re-matcher #"<(\w+)>" (last parent-children))
-        children (extract-children child-matcher nil)]
+        children (extract-children child-matcher)]
     (println "+++ children:")
     (println children)))
 
-(defn extract-children [to-extract extracted]
+(defn extract-children [to-extract]
   (let [child (re-find to-extract)]
     (if child
       (do
         (print "child:")
         (println child)
-        (print "extracted:")
-        (println extracted)
-        (recur to-extract (conj extracted (last child))))
-      (do
-        (print "**extracted:")
-        (println extracted)
-        (extracted)))))
+        (conj (extract-children to-extract) (last child)))
+      (vector))))

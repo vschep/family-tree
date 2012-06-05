@@ -1,0 +1,22 @@
+<Bregor> parent_of <Hirwen>, <Gilwen>, <Bregil>, <Bregolas>, <Barahir>, <Gwindor>.
+<Gilwen> married_to <Alatar>.
+<Gilwen> parent_of <Hiril>, <Hareth>, <Hundar>, <Haldir>.
+<Bregil> married_to <Aegnor>.
+<Bregil> parent_of <Elured>, <Elurin>, <Elwing>.
+<Ailinel> married_to <Cemendur>.
+<Ailinel> parent_of <Turin>, <Nienor>, <Lalaith>.  
+<Idril> married_to <Elured>.
+<Idril> parent_of <Elwin>, <Earendil>.
+<Elurin> married_to <Este>.
+<Elurin> parent_of <Aerandir>, <Erellont>.
+<Celebrian> married_to <Bregor>.
+<Gwindor> married_to <Firiel>.
+<Gwindor> parent_of <Vardamir>, <Atanalcar>, <Figwit>.
+<Vardamir> married_to <Melian>.
+<Vardamir> parent_of <Baragund>, <Vardilme>.
+<Figwit> married_to <Borin>.
+<Figwit> parent_of <Atalnacar>, <Tindomiel>.
+<Baragund> married_to <Nimrodel>.
+<Baragund> parent_of <Taraldarion>, <Ailinel>.
+<Vardilme> married_to <Thingol>.
+<Vardilme> parent_of <Taranarion>, <Tarsurion>, <Isilmo>.
