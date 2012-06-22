@@ -1,6 +1,6 @@
 (ns family-tree.core)
 
-(def ^:dynamic *fam-db*)
+(def fam-db (ref {}))
 
 (defmacro dbg
   [x]
@@ -35,7 +35,8 @@
 
 (defn read-families []
   (with-open [rdr (clojure.java.io/reader "/Users/vschepik/src/clojure/family-tree/people.data")]
-    (reduce read-a-family [(hash-map) (hash-map)] (line-seq rdr))))
+    (dosync
+      (ref-set fam-db (reduce read-a-family [(hash-map) (hash-map)] (line-seq rdr))))))
 
 (defn ^:dynamic children-of [parent]
-  *fam-db* parent)
+  ((first @fam-db) parent))

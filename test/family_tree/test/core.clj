@@ -21,9 +21,9 @@
   (is (read-parent-of {} "<Gilwen> married_to <Alatar>.") {}))
 
 (deftest test-children-of
-  (binding [*fam-db* {"Bregor" ["Hirwen" "Gilwen"]
-                      "Gilwen" ["Hiril" "Hareth"]}]
+  (dosync (ref-set fam-db [{"Bregor" ["Hirwen" "Gilwen"]
+                           "Gilwen" ["Hiril" "Hareth"]}]))
     (let [children (children-of "Gilwen")]
       (is (and 
             (some (partial = "Hiril") children)
-            (some (partial = "Hareth") children))))))
+            (some (partial = "Hareth") children)))))
