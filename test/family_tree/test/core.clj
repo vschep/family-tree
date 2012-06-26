@@ -59,3 +59,11 @@
                                    "Gwindor" ["Vardamir" "Figwit"]
                                    "Vardamir" ["Baragund" "Vardilme"]}]))
          (is (= "Gwindor" (grandparent-of "Baragund"))))
+
+(deftest test-root-detection
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured" "Elurin"]
+                                   "Gwindor" ["Vardamir" "Figwit"]
+                                   "Vardamir" ["Baragund" "Vardilme"]}]))
+         (is (= "Bregor" (root @fam-db))))
+

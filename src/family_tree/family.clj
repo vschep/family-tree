@@ -48,18 +48,16 @@
 (defn children-of [parent]
   ((first @fam-db) parent))
 
-;; TODO implement
 (defn root [fam-db]
-  "Bregor")
+  (let [parents (set (keys (first fam-db)))
+        children (flatten (vals (first fam-db)))]
+    (first (apply (partial disj parents) children))))
 
 (defn ^:dynamic find-parent [{fam-db           :fam-db 
                               current-parent   :current-parent 
                               offspring        :offspring
                               anc-level        :ancestry-level}]
   (do
-    (dbg current-parent)
-    (dbg offspring)
-    (dbg anc-level)
     (let [children ((first fam-db) current-parent)]
       (cond 
         ; there is nothing left
@@ -73,10 +71,10 @@
         ; continue searching
         :default (let [max-children (count children)]
                    (loop [n 0
-                          next-child (dbg (get children n))
+                          next-child (get children n)
                           found-parent nil]
                      (do
-                       (if (dbg (< n max-children))
+                       (if (< n max-children)
                          (if (not found-parent)
                            ; search deeper
                            (let [deeper-parent (find-parent {:fam-db fam-db 
@@ -85,8 +83,8 @@
                                                              :ancestry-level anc-level})]
                              (if deeper-parent 
                                (if (and (not (:parent deeper-parent)) (= anc-level (+ 1 (:hop-back deeper-parent))))
-                                 (dbg (assoc deeper-parent :parent current-parent))
-                                 (dbg (assoc deeper-parent :hop-back (+ 1 (:hop-back deeper-parent)))))
+                                 (assoc deeper-parent :parent current-parent)
+                                 (assoc deeper-parent :hop-back (+ 1 (:hop-back deeper-parent))))
                                (recur (+ n 1) 
                                       (get children (+ n 1))
                                       deeper-parent))))))))))))
@@ -98,9 +96,8 @@
                          :ancestry-level 1})))
 
 (defn grandparent-of [offspring]
-  (do
-    (println "grandparent-of" offspring)
     (:parent (find-parent {:fam-db @fam-db 
                            :current-parent (root @fam-db) 
                            :offspring offspring
-                           :ancestry-level 2}))))
+                           :ancestry-level 2})))
+
