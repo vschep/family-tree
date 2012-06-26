@@ -40,33 +40,67 @@
     (dosync
       (ref-set fam-db (reduce read-a-family [(hash-map) (hash-map)] (line-seq rdr))))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; query the family-tree
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn children-of [parent]
   ((first @fam-db) parent))
 
 ;; TODO implement
 (defn root [fam-db]
-  "Gullin")
+  "Bregor")
 
-(defn find-parent [{fam-db :fam-db 
-                              current-parent :current-parent 
-                              child :child}]
-  (let [children ((first fam-db) current-parent)]
-    (cond 
-      (not children) nil
-      (some (partial = child) children) current-parent
-      :default (let [max-children (count children)]
-                 (loop [n 0
-                        next-child (get children n)
-                        found-parent nil]
-                   (if (or (< n max-children) (not found-parent))
-                     (recur (+ n 1) (get children n) (find-parent {:fam-db fam-db :current-parent next-child :child child}))
-                     found-parent))))))
+(defn ^:dynamic find-parent [{fam-db           :fam-db 
+                              current-parent   :current-parent 
+                              offspring        :offspring
+                              anc-level        :ancestry-level}]
+  (do
+    (dbg current-parent)
+    (dbg offspring)
+    (dbg anc-level)
+    (let [children ((first fam-db) current-parent)]
+      (cond 
+        ; there is nothing left
+        (not children) nil
 
+        ; succeeded
+        (some (partial = offspring) children) (if (= 1 anc-level)
+                                                {:parent current-parent :hop-back 1}
+                                                {:hop-back 1})
 
-(defn parent-of [child]
-  (find-parent {:fam-db @fam-db 
-                :current-parent (root @fam-db) 
-                :child child}))
+        ; continue searching
+        :default (let [max-children (count children)]
+                   (loop [n 0
+                          next-child (dbg (get children n))
+                          found-parent nil]
+                     (do
+                       (if (dbg (< n max-children))
+                         (if (not found-parent)
+                           ; search deeper
+                           (let [deeper-parent (find-parent {:fam-db fam-db 
+                                                             :current-parent next-child 
+                                                             :offspring offspring 
+                                                             :ancestry-level anc-level})]
+                             (if deeper-parent 
+                               (if (and (not (:parent deeper-parent)) (= anc-level (+ 1 (:hop-back deeper-parent))))
+                                 (dbg (assoc deeper-parent :parent current-parent))
+                                 (dbg (assoc deeper-parent :hop-back (+ 1 (:hop-back deeper-parent)))))
+                               (recur (+ n 1) 
+                                      (get children (+ n 1))
+                                      deeper-parent))))))))))))
 
+(defn parent-of [offspring]
+  (:parent (find-parent {:fam-db @fam-db 
+                         :current-parent (root @fam-db) 
+                         :offspring offspring
+                         :ancestry-level 1})))
+
+(defn grandparent-of [offspring]
+  (do
+    (println "grandparent-of" offspring)
+    (:parent (find-parent {:fam-db @fam-db 
+                           :current-parent (root @fam-db) 
+                           :offspring offspring
+                           :ancestry-level 2}))))

@@ -34,7 +34,28 @@
           (some (partial = "Hareth") children)))))
 
 (deftest test-parents-of-without-marriage
-  (dosync (ref-set fam-db [{"Gullin" ["Bregor" "Gwindor"]
-                           "Bregor" ["Bregil" "Arachon"]}]))
+  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                            "Bregil" ["Elured" "Elurin"]}]))
   (is (= "Bregor" (parent-of "Bregil"))))
 
+(deftest test-grandparents-of-without-marriage-1
+  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                            "Bregil" ["Elured" "Elurin"]}]))
+  (is (= "Bregor" (grandparent-of "Elured"))))
+
+(deftest test-grandparents-of-without-marriage-2
+  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                            "Bregil" ["Elured" "Elurin"]}]))
+  (is (= "Bregor" (grandparent-of "Elurin"))))
+
+(deftest test-grandparents-of-without-marriage-3
+  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                            "Bregil" ["Elured"]}]))
+  (is (= "Bregor" (grandparent-of "Elured"))))
+
+(deftest test-grandparents-of-without-marriage-4
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured" "Elurin"]
+                                   "Gwindor" ["Vardamir" "Figwit"]
+                                   "Vardamir" ["Baragund" "Vardilme"]}]))
+         (is (= "Gwindor" (grandparent-of "Baragund"))))
