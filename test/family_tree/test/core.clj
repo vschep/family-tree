@@ -38,6 +38,11 @@
                             "Bregil" ["Elured" "Elurin"]}]))
   (is (= "Bregor" (parent-of "Bregil"))))
 
+(deftest test-parents-with-marriage
+  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]}
+                           {"Bregor" "Celebrian", "Celebrian" "Bregor", "Bregil" "Aegnor", "Aegnor" "Bregil"}]))
+  (is (= "Bregor" (parent-of "Aegnor"))))
+
 (deftest test-grandparents-of-without-marriage-1
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                             "Bregil" ["Elured" "Elurin"]}]))

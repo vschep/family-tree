@@ -53,41 +53,74 @@
         children (flatten (vals (first fam-db)))]
     (first (apply (partial disj parents) children))))
 
-(defn ^:dynamic find-parent [{fam-db           :fam-db 
-                              current-parent   :current-parent 
-                              offspring        :offspring
-                              anc-level        :ancestry-level}]
+(defn assoc-parent [first-matched-parent current-parent anc-level]
+  (if (and (not (:parent first-matched-parent)) (= anc-level (+ 1 (:hop-back first-matched-parent))))
+    (assoc first-matched-parent :parent current-parent)
+    (assoc first-matched-parent :hop-back (+ 1 (:hop-back first-matched-parent)))))
+
+(defn search-deeper [{fam-db :fam-db        
+                      current-parent :current-parent 
+                      offspring :offspring  
+                      anc-level :ancestry-level
+                      children :next-children}]
+
+  (let [max-children (count children)]
+    (loop [n 0
+           found-parent nil]
+      (do
+        (println "$$$ begin search-deeper:" children found-parent)
+        (if (< n max-children)
+          (if (not found-parent)
+            ; search deeper
+            (let [next-child (nth children n)]
+              (do
+                (println "$$$ search deeper")
+                (let [deeper-parent (find-parent {:fam-db fam-db 
+                                                  :current-parent next-child 
+                                                  :offspring offspring 
+                                                  :ancestry-level anc-level})]
+                  (if deeper-parent 
+                    (assoc-parent deeper-parent current-parent anc-level)
+                    (do
+                      (println "$$$ children before IndexOutOfBounds " children)
+                      (println "$$$ n " n)
+                      ; continue looping
+                      (recur (+ n 1)                    
+                             deeper-parent))))))))))))
+
+(defn find-parent [{fam-db :fam-db        
+                    current-parent :current-parent 
+                    offspring :offspring  
+                    anc-level :ancestry-level}]
   (do
-    (let [children ((first fam-db) current-parent)]
-      (cond 
-        ; there is nothing left
-        (not children) nil
+    (println "$$$ offspring in find-parent " offspring)
+    (let [direct-children ((first fam-db) current-parent)
+          couples (second fam-db)
+          couples-of-children (remove nil? (map #(get couples %) direct-children))
+          children (flatten (conj direct-children couples-of-children))]
+      (do
+        (dbg children)
+        ; search the offspring
+        (cond 
+          ; no children left
+          (empty? children) (do 
+                              (println "no children left")
+                              nil)
 
-        ; succeeded
+        ; offspring is a child
         (some (partial = offspring) children) (if (= 1 anc-level)
-                                                {:parent current-parent :hop-back 1}
-                                                {:hop-back 1})
-
-        ; continue searching
-        :default (let [max-children (count children)]
-                   (loop [n 0
-                          next-child (get children n)
-                          found-parent nil]
-                     (do
-                       (if (< n max-children)
-                         (if (not found-parent)
-                           ; search deeper
-                           (let [deeper-parent (find-parent {:fam-db fam-db 
-                                                             :current-parent next-child 
-                                                             :offspring offspring 
-                                                             :ancestry-level anc-level})]
-                             (if deeper-parent 
-                               (if (and (not (:parent deeper-parent)) (= anc-level (+ 1 (:hop-back deeper-parent))))
-                                 (assoc deeper-parent :parent current-parent)
-                                 (assoc deeper-parent :hop-back (+ 1 (:hop-back deeper-parent))))
-                               (recur (+ n 1) 
-                                      (get children (+ n 1))
-                                      deeper-parent))))))))))))
+                                                (do
+                                                  (println "$$$ offspring found: " offspring anc-level current-parent children)
+                                                  {:parent current-parent :hop-back 1})
+                                                  {:hop-back 1})
+        ; search deeper in the tree
+        :default (do 
+                   (println "$$$ search-deeper " current-parent offspring anc-level children)
+                   (search-deeper {:fam-db fam-db 
+                                   :current-parent current-parent
+                                   :offspring offspring 
+                                   :ancestry-level anc-level
+                                   :next-children children})))))))
 
 (defn parent-of [offspring]
   (:parent (find-parent {:fam-db @fam-db 
@@ -96,8 +129,10 @@
                          :ancestry-level 1})))
 
 (defn grandparent-of [offspring]
+  (do
+    (println "$$$ offspring in grandparent-of " offspring)
     (:parent (find-parent {:fam-db @fam-db 
                            :current-parent (root @fam-db) 
                            :offspring offspring
-                           :ancestry-level 2})))
+                           :ancestry-level 2}))))
 
