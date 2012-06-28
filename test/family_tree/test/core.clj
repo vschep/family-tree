@@ -2,6 +2,12 @@
   (:use [family-tree.core])
   (:use [clojure.test]))
 
+;;; test helpers
+
+(defn check-couple [couple spouses]
+  (every? true? (map #(some (partial = %) couple) spouses)))
+
+
 ;;; read the file
 
 (deftest test-read-parent-of-empty-hash-1
@@ -36,34 +42,34 @@
 (deftest test-parents-of-without-marriage
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                             "Bregil" ["Elured" "Elurin"]}]))
-  (is (= "Bregor" (parent-of "Bregil"))))
+  (is (check-couple ["Bregor"] (parent-of "Bregil"))))
 
 (deftest test-parents-with-marriage
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]}
                            {"Bregor" "Celebrian", "Celebrian" "Bregor", "Bregil" "Aegnor", "Aegnor" "Bregil"}]))
-  (is (= "Bregor" (parent-of "Aegnor"))))
+  (is (check-couple ["Bregor" "Celebrian"](parent-of "Aegnor"))))
 
 (deftest test-grandparents-of-without-marriage-1
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                             "Bregil" ["Elured" "Elurin"]}]))
-  (is (= "Bregor" (grandparent-of "Elured"))))
+  (is (check-couple ["Bregor"] (grandparent-of "Elured"))))
 
 (deftest test-grandparents-of-without-marriage-2
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                             "Bregil" ["Elured" "Elurin"]}]))
-  (is (= "Bregor" (grandparent-of "Elurin"))))
+  (is (check-couple ["Bregor"] (grandparent-of "Elurin"))))
 
 (deftest test-grandparents-of-without-marriage-3
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                             "Bregil" ["Elured"]}]))
-  (is (= "Bregor" (grandparent-of "Elured"))))
+  (is (check-couple ["Bregor"] (grandparent-of "Elured"))))
 
 (deftest test-grandparents-of-without-marriage-4
          (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                                    "Bregil" ["Elured" "Elurin"]
                                    "Gwindor" ["Vardamir" "Figwit"]
                                    "Vardamir" ["Baragund" "Vardilme"]}]))
-         (is (= "Gwindor" (grandparent-of "Baragund"))))
+         (is (check-couple ["Gwindor"] (grandparent-of "Baragund"))))
 
 (deftest test-root-detection
          (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
@@ -71,4 +77,9 @@
                                    "Gwindor" ["Vardamir" "Figwit"]
                                    "Vardamir" ["Baragund" "Vardilme"]}]))
          (is (= "Bregor" (root @fam-db))))
+
+(deftest test-get-couple
+         (dosync (ref-set fam-db [{}
+                                  {"Bregor" "Celebrian", "Celebrian" "Bregor", "Bregil" "Aegnor", "Aegnor" "Bregil"}]))
+         (is (check-couple (get-couple "Bregor") ["Bregor" "Celebrian"])))
 

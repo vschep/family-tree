@@ -122,16 +122,19 @@
                                    :ancestry-level anc-level
                                    :next-children children})))))))
 
+(defn get-couple [spouse]
+  (do
+    (println "$$$ get-couple " spouse @fam-db (get (second @fam-db) spouse))
+    (remove nil? (list spouse (get (second @fam-db) spouse)))))
+
 (defn parent-of [offspring]
-  (:parent (find-parent {:fam-db @fam-db 
+  (get-couple (:parent (find-parent {:fam-db @fam-db 
                          :current-parent (root @fam-db) 
                          :offspring offspring
-                         :ancestry-level 1})))
+                         :ancestry-level 1}))))
 
 (defn grandparent-of [offspring]
-  (do
-    (println "$$$ offspring in grandparent-of " offspring)
-    (:parent (find-parent {:fam-db @fam-db 
+    (get-couple (:parent (find-parent {:fam-db @fam-db 
                            :current-parent (root @fam-db) 
                            :offspring offspring
                            :ancestry-level 2}))))
