@@ -6,7 +6,9 @@
   [x]
   `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
+;;;;;;;;;;;;;;;;;
 ;;; read the file
+;;;;;;;;;;;;;;;;;
 
 (defn extract-children [to-extract]
   (let [child (re-find to-extract)]
@@ -45,8 +47,26 @@
 ;;; query the family-tree
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; TODO enhance for children of spouses
 (defn children-of [parent]
   ((first @fam-db) parent))
+
+(defn nth-level-children [{fam-db :fam-db
+                           current-parent :current-parent
+                           target-level :target-level
+                           current-level :current-level}]
+  (let [children (children-of current-parent)]
+    (if children
+      (if (< current-level target-level)
+        (let [deeper-children (remove nil? (flatten (map #(nth-level-children {:fam-db fam-db
+                                                                               :current-parent %
+                                                                               :target-level target-level
+                                                                               :current-level (+ 1 current-level)}) children)))]
+          deeper-children)
+        children))))
+
+(defn grandchildren-of [grandparent]
+  (nth-level-children {:fam-db @fam-db :current-parent grandparent :target-level 2 :current-level 1}))
 
 (defn root [fam-db]
   (let [parents (set (keys (first fam-db)))
@@ -67,75 +87,56 @@
   (let [max-children (count children)]
     (loop [n 0
            found-parent nil]
-      (do
-        (println "$$$ begin search-deeper:" children found-parent)
-        (if (< n max-children)
-          (if (not found-parent)
-            ; search deeper
-            (let [next-child (nth children n)]
-              (do
-                (println "$$$ search deeper")
-                (let [deeper-parent (find-parent {:fam-db fam-db 
-                                                  :current-parent next-child 
-                                                  :offspring offspring 
-                                                  :ancestry-level anc-level})]
-                  (if deeper-parent 
-                    (assoc-parent deeper-parent current-parent anc-level)
-                    (do
-                      (println "$$$ children before IndexOutOfBounds " children)
-                      (println "$$$ n " n)
-                      ; continue looping
-                      (recur (+ n 1)                    
-                             deeper-parent))))))))))))
+      (if (< n max-children)
+        (if (not found-parent)
+          ; search deeper
+          (let [next-child (nth children n)]
+            (let [deeper-parent (find-parent {:fam-db fam-db 
+                                              :current-parent next-child 
+                                              :offspring offspring 
+                                              :ancestry-level anc-level})]
+              (if deeper-parent 
+                (assoc-parent deeper-parent current-parent anc-level)
+                ; continue looping
+                (recur (+ n 1)                    
+                       deeper-parent)))))))))
 
 (defn find-parent [{fam-db :fam-db        
                     current-parent :current-parent 
                     offspring :offspring  
                     anc-level :ancestry-level}]
-  (do
-    (println "$$$ offspring in find-parent " offspring)
-    (let [direct-children ((first fam-db) current-parent)
-          couples (second fam-db)
-          couples-of-children (remove nil? (map #(get couples %) direct-children))
-          children (flatten (conj direct-children couples-of-children))]
-      (do
-        (dbg children)
-        ; search the offspring
-        (cond 
-          ; no children left
-          (empty? children) (do 
-                              (println "no children left")
-                              nil)
+  (let [direct-children     ((first fam-db) current-parent)
+        couples             (second fam-db)
+        couples-of-children (remove nil? (map #(get couples %) direct-children))
+        children            (flatten (conj direct-children couples-of-children))]
+    ; search the offspring
+    (cond 
+      ; no children left
+      (empty? children) nil
 
-        ; offspring is a child
-        (some (partial = offspring) children) (if (= 1 anc-level)
-                                                (do
-                                                  (println "$$$ offspring found: " offspring anc-level current-parent children)
-                                                  {:parent current-parent :hop-back 1})
-                                                  {:hop-back 1})
-        ; search deeper in the tree
-        :default (do 
-                   (println "$$$ search-deeper " current-parent offspring anc-level children)
-                   (search-deeper {:fam-db fam-db 
-                                   :current-parent current-parent
-                                   :offspring offspring 
-                                   :ancestry-level anc-level
-                                   :next-children children})))))))
+      ; offspring is a child
+      (some (partial = offspring) children) (if (= 1 anc-level)
+                                              {:parent current-parent :hop-back 1}
+                                              {:hop-back 1})
+      ; search deeper in the tree
+      :default (search-deeper {:fam-db fam-db 
+                               :current-parent current-parent
+                               :offspring offspring 
+                               :ancestry-level anc-level
+                               :next-children children}))))
 
 (defn get-couple [spouse]
-  (do
-    (println "$$$ get-couple " spouse @fam-db (get (second @fam-db) spouse))
-    (remove nil? (list spouse (get (second @fam-db) spouse)))))
+  (remove nil? (list spouse (get (second @fam-db) spouse))))
 
 (defn parent-of [offspring]
   (get-couple (:parent (find-parent {:fam-db @fam-db 
-                         :current-parent (root @fam-db) 
-                         :offspring offspring
-                         :ancestry-level 1}))))
+                                     :current-parent (root @fam-db) 
+                                     :offspring offspring
+                                     :ancestry-level 1}))))
 
 (defn grandparent-of [offspring]
-    (get-couple (:parent (find-parent {:fam-db @fam-db 
-                           :current-parent (root @fam-db) 
-                           :offspring offspring
-                           :ancestry-level 2}))))
+  (get-couple (:parent (find-parent {:fam-db @fam-db 
+                                     :current-parent (root @fam-db) 
+                                     :offspring offspring
+                                     :ancestry-level 2}))))
 

@@ -39,6 +39,18 @@
           (some (partial = "Hiril") children)
           (some (partial = "Hareth") children)))))
 
+(deftest test-grandchildren-of-1
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured" "Elurin"]
+                                   "Gwindor" ["Vardamir" "Figwit"]
+                                   "Vardamir" ["Baragund" "Vardilme"]}]))
+         (let [grandchildren (grandchildren-of "Gwindor")]
+           (do
+             (dbg grandchildren)
+             (is (and
+                   (some (partial = "Baragund") grandchildren)
+                   (some (partial = "Vardilme") grandchildren))))))
+
 (deftest test-parents-of-without-marriage
   (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
                             "Bregil" ["Elured" "Elurin"]}]))
