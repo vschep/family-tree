@@ -32,12 +32,12 @@
 ;;; query the family-tree
 
 (deftest test-children-of
-  (dosync (ref-set fam-db [{"Bregor" ["Hirwen" "Gilwen"]
-                           "Gilwen" ["Hiril" "Hareth"]}]))
-  (let [children (children-of "Gilwen")]
-    (is (and 
-          (some (partial = "Hiril") children)
-          (some (partial = "Hareth") children)))))
+         (dosync (ref-set fam-db [{"Bregor" ["Hirwen" "Gilwen"]
+                                   "Gilwen" ["Hiril" "Hareth"]}]))
+         (let [children (children-of "Gilwen")]
+           (is (and 
+                 (some (partial = "Hiril") children)
+                 (some (partial = "Hareth") children)))))
 
 (deftest test-grandchildren-of-1
          (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
@@ -45,36 +45,47 @@
                                    "Gwindor" ["Vardamir" "Figwit"]
                                    "Vardamir" ["Baragund" "Vardilme"]}]))
          (let [grandchildren (grandchildren-of "Gwindor")]
-           (do
-             (dbg grandchildren)
-             (is (and
-                   (some (partial = "Baragund") grandchildren)
-                   (some (partial = "Vardilme") grandchildren))))))
+           (is (and
+                 (some (partial = "Baragund") grandchildren)
+                 (some (partial = "Vardilme") grandchildren)))))
+
+(deftest test-grandchildren-of-2
+         (dosync (ref-set fam-db [{"Bregil" ["Elured" "Elurin"]
+                                   "Idril"  ["Elwin" "Earendil"]
+                                   "Elurin" ["Aerandir" "Erellont"]}
+                                  {"Elured" "Idril", "Idril" "Elured", "Elurin" "Este", "Este" "Elurin"}]))
+         (let [grandchildren (grandchildren-of "Bregil")]
+           (is (and
+                 (some (partial = "Elwin") grandchildren)
+                 (some (partial = "Earendil") grandchildren)
+                 (some (partial = "Aerandir") grandchildren)
+                 (some (partial = "Erellont") grandchildren)))))
+
 
 (deftest test-parents-of-without-marriage
-  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
-                            "Bregil" ["Elured" "Elurin"]}]))
-  (is (check-couple ["Bregor"] (parent-of "Bregil"))))
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured" "Elurin"]}]))
+         (is (check-couple ["Bregor"] (parent-of "Bregil"))))
 
 (deftest test-parents-with-marriage
-  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]}
-                           {"Bregor" "Celebrian", "Celebrian" "Bregor", "Bregil" "Aegnor", "Aegnor" "Bregil"}]))
-  (is (check-couple ["Bregor" "Celebrian"](parent-of "Aegnor"))))
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]}
+                                  {"Bregor" "Celebrian", "Celebrian" "Bregor", "Bregil" "Aegnor", "Aegnor" "Bregil"}]))
+         (is (check-couple ["Bregor" "Celebrian"](parent-of "Aegnor"))))
 
 (deftest test-grandparents-of-without-marriage-1
-  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
-                            "Bregil" ["Elured" "Elurin"]}]))
-  (is (check-couple ["Bregor"] (grandparent-of "Elured"))))
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured" "Elurin"]}]))
+         (is (check-couple ["Bregor"] (grandparent-of "Elured"))))
 
 (deftest test-grandparents-of-without-marriage-2
-  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
-                            "Bregil" ["Elured" "Elurin"]}]))
-  (is (check-couple ["Bregor"] (grandparent-of "Elurin"))))
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured" "Elurin"]}]))
+         (is (check-couple ["Bregor"] (grandparent-of "Elurin"))))
 
 (deftest test-grandparents-of-without-marriage-3
-  (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
-                            "Bregil" ["Elured"]}]))
-  (is (check-couple ["Bregor"] (grandparent-of "Elured"))))
+         (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]
+                                   "Bregil" ["Elured"]}]))
+         (is (check-couple ["Bregor"] (grandparent-of "Elured"))))
 
 (deftest test-grandparents-of-without-marriage-4
          (dosync (ref-set fam-db [{"Bregor" ["Gilwen" "Bregil" "Gwindor"]

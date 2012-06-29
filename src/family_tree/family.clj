@@ -49,7 +49,8 @@
 
 ; TODO enhance for children of spouses
 (defn children-of [parent]
-  ((first @fam-db) parent))
+  (let [families (first @fam-db)]
+    (flatten (map #(get families %) (get-couple parent)))))
 
 (defn nth-level-children [{fam-db :fam-db
                            current-parent :current-parent
