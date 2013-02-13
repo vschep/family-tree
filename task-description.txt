@@ -1,0 +1,42 @@
+Language Shootout
+
+"Programs should be written for people to read, and only incidentally for machines to execute." Abelson, Harold, and Gerald Sussman, Structure and Interpretation of Computer Programs.
+
+"A programming language is for thinking of programs, not for expressing programs you've already thought of." Paul Graham, Hackers & Painters.
+
+
+Jede Programmiersprache bringt (mindestens) einen Programmierstil mit sich. Daraus ergibt sich eine Denkweise für den Programmierer. Diese Denkweise beeinflusst die Herangehensweise an Probleme und die Beschreibung der Lösung in der Programmiersprache.
+
+Zweck des Language Shootouts: Zeige den Stil der Programmiersprache Deiner Wahl und wie elegant sich ein Problem darin lösen lässt.
+
+Rahmenbedingungen:
+- Fokus auf Core-Language und Standard-Libs, nicht Frameworks
+- Frameworks können für das Drumherum verwendet werden, z.B. für die Benutzeroberfläche, sollen aber nicht großartig präsentiert werden
+- Erlaubte Präsentationsmedien: 
+           - Entwicklungstools (Editor, IDE, Debugger, ...), Flipchart
+           - Papier-Handouts zum Mitnehmen
+- Keine (Powerpoint-)Präsentation
+
+
+Aufgabenstellung 1: Familienstammbaum
+
+- Familienstammbaum aus vorgegebener Textdatei einlesen.
+- Interaktiv (Command Line ist ausreichend) folgende Fragen beantworten:
+  * Wer sind die Eltern von "X"?
+  * Wer sind die Großeltern von "X"?
+  * Wer sind die Kinder von "X"?
+  * Wer sind die Enkelkinder von "X"?
+  * Wer sind die Tanten und Onkel von "X"?
+  * Wer sind die Cousinen und Cousins von "X"?
+
+
+Aufgabenstellung 2: Song-DB
+
+- CSV-Datei einlesen
+    4 Spalten, Namen fest vorgegeben:
+    Titel, Interpret, Album, Wertung
+- Interaktiv filtern
+    Bsp.:
+      Wertung > 3
+      Interpret: Peter (nur komplette Treffer, Ausnahme: Wertung)
+    Alle Spalten werden Und-verknüpft
